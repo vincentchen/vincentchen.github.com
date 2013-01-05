@@ -25,7 +25,7 @@ h2. 软硬环境
 
 * 笔记本：Macbook Pro MD103，CPU：I7 2.3G，内存：16G，硬盘：500G
 
-h2. 关于www.kafeitu.me
+h2. 关于blog.vincentchan.info
 
 * 介绍业内流行、成熟的技术、工具、敏捷
 
@@ -44,7 +44,7 @@ h2. 联系我
 * QQ：576525789
 * MSN、Email：yanhonglei[@]gmail.com
 * Weibo: <a href='http://weibo.com/kafeituzi'>@kafeituzi</a>
-* Blog: <a href='http://www.kafeitu.me'>http://www.kafeitu.me</a>
+* Blog: <a href='http://blog.vincentchan.info'>http://blog.vincentchan.info</a>
 
 h2. Github项目
 
