@@ -1,0 +1,44 @@
+---
+layout: post
+title: Flex4 异常简单的拖拽处理实现
+tags:
+- Flex
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+<pre class="brush: actionscript3">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;s:Application xmlns:fx=&quot;http://ns.adobe.com/mxml/2009&quot;
+	xmlns:s=&quot;library://ns.adobe.com/flex/spark&quot;&gt;
+    &lt;fx:Script&gt;&lt;![CDATA[
+	import mx.managers.CursorManager;
+	//在Flex4中实现拖拽居然如此简单(Flex3没用过不知道)
+	//定义一个区域，在此区域内拖拽
+	private var rectangle:Rectangle = new Rectangle(2, 2, 196, 156);
+	//自定义鼠标指针
+	[Embed(source=&#039;images/cursor_drag_arrow.png&#039;)]
+	private var customCursor:Class;
+	//target就是你要拖拽的目标，
+	//在mouseDown注册下面方法开始拖拽|
+	private function startMove(event:Event):void {
+		CursorManager.removeAllCursors();
+		CursorManager.setCursor(customCursor);
+		Sprite(target).startDrag(true, rectangle);
+	}
+	//在mouseUp注册下面方法结束拖拽
+	private function stopMove(event:Event):void {
+		CursorManager.removeAllCursors();
+		Sprite(target).stopDrag();
+	}
+	]]&gt;&lt;/fx:Script&gt;
+	&lt;s:SkinnableContainer id=&quot;target&quot;
+		x=&quot;196&quot; y=&quot;156&quot; width=&quot;122&quot; height=&quot;82&quot;
+		skinClass=&quot;skins.CustomVideoDisplaySkin&quot;
+		mouseDown=&quot;startMove(event)&quot;
+		mouseUp=&quot;stopMove(event)&quot;&gt;
+		&lt;s:VideoDisplay id=&quot;outVideoPanel&quot; width=&quot;120&quot; height=&quot;80&quot;/&gt;
+	&lt;/s:SkinnableContainer&gt;
+	&lt;!--神速吧，顺便实现了替换自定义指针图标功能。--&gt;
+&lt;/s:Application&gt;</pre>

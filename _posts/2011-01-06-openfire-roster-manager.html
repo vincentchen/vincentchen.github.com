@@ -1,0 +1,76 @@
+---
+layout: post
+title: openfire--好友管理
+tags:
+- IM
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: ''
+---
+原帖：http://blog.sina.com.cn/s/blog_473f547b0100kt95.html
+最近项目要实现web im，选择的是openfire服务器。需要将网站中的好友与im中的集成起来。因此好好研究了一下在openfire中如何实现好友分组管理。
+    主要基于两张table实现:ofroster,ofrostergroups。
+    ofroster：用于记录好友关系（一对好友关系用两条记录来实现）
+    ofrostergroups：用于记录好友分组
+    特别说明：openfire中用户的主键是自然主键，也就是username。没有使用自增ID。
+    我们先来看一下官方（http://www.igniterealtime.org/builds/openfire/docs/latest/documentation/database-guide.html）对 两张表的描述：
+
+ofRoster (buddy rosters or lists)Column Name Type Length Description
+rosterID	NUMBER	n/a	ID of roster (Primary Key)
+username	VARCHAR	32	User Name
+jid             TEXT         n/a    The address of the roster entry
+sub           NUMBER      n/a    The subscription status of the entry
+ask           NUMBER      n/a    The ask status of the entry
+recv         NUMBER      n/a     Flag indicating the entry is a roster request that was received
+nick          VARCHAR    255    The nickname assigned to this roster entry
+
+ofRosterGroups (Groups of buddy entries in a roster)Column Name Type Length Description
+rosterID	NUMBER	n/a	Roster ID (Primary Key)
+rank	        NUMBER	n/a	Position of the entry (Primary Key)
+groupName	VARCHAR	255	The user defined name for this roster group
+
+
+看不太明白？不要着急，我们慢慢分析。
+假设有用户A,用户B。
+当A申请加B为好友时（例如：A将B加入好亲人的分组中）。会在ofroster表中插入两条记录，
+rosterID  username     jid        sub  ask  recv  nick
+1          A      B@192.168.1.102 0     0   -1     B
+2          B      A@192.168.1.102 0    -1    1    null
+同时往ofrostergroups表中插入一条记录
+rosterID    rank    groupName
+1            0        亲人
+
+这时B同意将A加为好友，并设置为家人分组中，那么会修改ofroster表中刚插入的两条记录,如下所示:
+rosterID  username     jid        sub  ask  recv  nick
+1          A      B@192.168.1.102 1     -1    1     B
+2          B      A@192.168.1.102 2      0   -1    null
+同时往ofrostergroups表中插入一条记录.
+rosterID    rank    groupName
+2            0        家人
+
+到此为止，双方的好友关系便建立起来。
+疑问：1.若B不同意呢？则不做任何操作。下一次，若B加A为好友，将等同于执行同意的操作。
+ 2.如何查询某个人所有好友，和分组？
+   在ofroster中根据username便可获得某个用户的所有好友信息。然后根据每条记录的rosterid去ofrostergroups表中查找分组的名称即可。
+ 3.当用户添加一个空的好友分组时，ofrostergroups表是否插入一条记录？
+   不插，测试发现并没有实质的插入一条记录，但用户可以看到这个分组名称，怎么回事？推测可能是存放在session中。测试发现当用户创建一个空的好友分组，然后下线，再上线时，发现该好友分组已消失。充分说明当好友分组为空时，并没有插库。
+
+Notice the different status types? Here is a list of all of the different status types, witha brief description, also from the plugin's readme file.
+askstatus
+-1—The roster item has no pending subscription requests.
+0—The roster item has been asked for permission to subscribe to its presence but no response has been received.
+1—The roster owner has asked the roster item to be unsubscribed from its presence notifications but hasn't yet received confi rmation.
+recvstatus
+-1—There are no subscriptions that have been received but not presented to the user.
+1—The server has received a subscribe request, but has not forwarded it to the user.
+2—The server has received an unsubscribe request, but has not forwarded it to the user.
+substatus
+-1—Indicates that the roster item should be removed.
+0—No subscription is established.
+1—The roster owner has a subscription to the roster item’s presence.
+2—The roster item has a subscription to the roster owner’s presence.
+3—The roster item and the owner have a mutual subscription.

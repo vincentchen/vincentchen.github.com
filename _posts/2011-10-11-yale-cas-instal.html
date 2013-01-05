@@ -1,0 +1,78 @@
+---
+layout: post
+title: Yale cas安装
+tags:
+- Architecture
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+<a href="http://blog.csdn.net/hudon/article/details/1499851">http://blog.csdn.net/hudon/article/details/1499851</a>
+
+看了网上很多CAS安装的步骤,结合自己的经验总结如下:
+
+一、配置Tomcat，启用SSL协议。
+
+1.在CAS要安装的机器上（也就是服务端）为Tomcat生成用于SSL通讯的密钥：keytool -genkey -alias tomcat -keyalg RSA，输入密钥密码和相应参数，（注意：第一个参数CN一定要输入CAS安装机器名，其他参数就随便了），结果是在用户目录中创建了名为.keystore的密钥文件。
+
+2.从服务端导出密钥文件：keytool -export -file server.crt -alias tomcat，输入上一步中的密码，结果在当前目录生成server.crt密钥文件。（注意：这个文件是要导入客户端的JVM上的）
+
+3.为客户端的JVM导入密钥：keytool -import -keystore $JAVA_HOME/jre/lib/security/cacerts -file server.crt -alias tomcat，输入密码（注意：这里的密码不是上面设定的密码，而是changeit），将创建cacerts文件。
+
+4.修改服务端的Tomcat配置文件server.xml，去掉对于SSL的注释，即开放8443端口，注意这里需要在connector字段中加入keystorePass="password"参数，password即为上面几步中涉及到的密码，keystoreFile＝".keystorePath",.keystorePath即为在第一步中生成的文件.keystore的全路径，如/usr/java/bin/.keystore。
+
+5.启动Tomcat，测试<a href="https://localhost:8443/">https://server:8443/</a>是否是需经过验证方可访问（注意：server为服务端的IP地址或机器名）。
+
+二、部署CAS Server 2.0.12到Tomcat
+
+1.一种简单的方法是将下载包中的cas.war文件直接复制到Tomcat的webapps目录下。
+
+2.另外一种方法，从sourceforge上找到ESUP-Portail CAS Generic Handler项目，利用<a href="http://prdownloads.sourceforge.net/esup-casgeneric/esup-cas-quick-start-2.0.5-2.zip?download">esup-cas-quick-start</a>生成一个最简的TOMCAT，详见我的下一篇文章。
+
+3.启动Tomcat，测试<a href="https://localhost:8443/cas">https://server:8443/cas</a>，是否可访问CAS主页面（注意：server为服务端的IP地址或机器名）。
+
+三、部署CAS Client 2.0.11到Servlet-Examples
+
+1.利用Servlet-Examples实例进行测试，将下载包中的casclient.jar文件复制到Servlet-Examples中WEB-INF目录的lib下，这里需要手工建立lib目录。
+
+2.修改Servlet-Examples的配置文件web.xml，加入以下的过滤器：
+<blockquote dir="ltr">&lt;!-- CAS Filters --&gt;
+&lt;filter&gt;
+&lt;filter-name&gt;CASFilter&lt;/filter-name&gt;
+&lt;filter-class&gt;edu.yale.its.tp.cas.client.filter.CASFilter&lt;/filter-class&gt;
+&lt;init-param&gt;
+&lt;param-name&gt;edu.yale.its.tp.cas.client.filter.loginUrl&lt;/param-name&gt;
+&lt;param-value&gt;https://server:8443/cas/login&lt;/param-value&gt;
+&lt;/init-param&gt;&lt;!--这里的server是服务端的IP--&gt;
+&lt;init-param&gt;
+&lt;param-name&gt;edu.yale.its.tp.cas.client.filter.validateUrl&lt;/param-name&gt;
+&lt;param-value&gt;https://serName:8443/cas/proxyValidate&lt;/param-value&gt;
+&lt;/init-param&gt;&lt;!--这里的serName是服务端的主机名，而且必须是--&gt;
+&lt;init-param&gt;
+&lt;param-name&gt;edu.yale.its.tp.cas.client.filter.serverName&lt;/param-name&gt;
+&lt;param-value&gt;client:port&lt;/param-value&gt;&lt;!--client:port就是需要CAS需要拦截的地址和端口，一般就是这个TOMCAT所启动的IP和port--&gt;
+&lt;/init-param&gt;
+&lt;/filter&gt;
+
+&lt;filter-mapping&gt;
+&lt;filter-name&gt;CASFilter&lt;/filter-name&gt;
+&lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;</blockquote>
+四、测试
+
+1.启动Tomcat，定位到Servlet-Examples应用，点击Execute；
+
+2.浏览器跳转至CAS登录首页，注意在URL中已经附上了Servlet-Examples的Service名
+
+3.输入用户名和密码，这里没有对其验证条件做修改，因此只要用户名和密码相同即可通过验证。
+
+4.验证通过后浏览器又重新定位至Servlet-Examples并显示该Servlet的内容。
+
+5.点击Http Header的Servlet应用，可以看到里面对当前用户的用户名信息做了记录。
+
+6.以后访问Servlet-Examples应用都无需再次输入用户名和密码了。
+
+至此，CAS Server和Client已经在Tomcat上成功部署与配置，并达到了预期的SSO效果。

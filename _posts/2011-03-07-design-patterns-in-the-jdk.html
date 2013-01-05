@@ -1,0 +1,266 @@
+---
+layout: post
+title: Design Patterns in the JDK
+tags:
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+<div style="text-align: left;" dir="ltr">Brian Du Preez, our <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aXEzcTNZemN1cXpTd28yRXlNMkl5bjNaaEwyOWdZM05pbnpBYVl6dTBvSmo9&amp;b=6">JCG</a> partner from <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aXEzcTNZeldsbkpTaE1VSWpwekl5cnY1aE1LRGk%3D&amp;b=6">Zen in the art of IT</a> has made a very fine job of collecting the most common <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aU1KNGhxMnllbktPeU1UeXVZejlsTWw5M25KZ2NZMEV5cDJ5YW95OWpMS0UwTUtXaEtsdXdvMjFqcUtFeXB5OW1MMnl5b3pBeVhEPT0%3D&amp;b=6">design patterns</a> found in the JDK. The pattern list is indeed impressive and long, so let us babble no more and present it to you.
+
+
+
+<a name="more"></a>I saw an article (well more of a rant) the other day, by Rob Williams <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aXEzcTNZemNsbzJrZk1LVmhMMjlnWTNXaUxhcWNvVGtjTEoxbVkySWhxVVc1WTJXbExKeWhLMkVsTEp5aEsyeWhLMklocVRJbHBVV2NwMklzTVRJMg%3D%3D&amp;b=6">Brain Drain in enterprise Dev</a>. I have to say, I do agree with some of what he is saying. I know from my personal experience, I had spent a good 2 or so years just wallowing in the enterprise development world, not learning anything and actually losing my skills I developed before. The corporate confront zone is not conducive to eager technologists.
+
+
+
+In this article he also stated:
+
+
+
+"1 in 10 cant even pass a simple test like ‘which design pattern is used in the streams library that makes <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aU1UOTNvemtpTEpEaG8zV3VMMmt5WXpBaW9GOWRMS011cDJIaVpGNDBZd1ZpTVQ5d3BsOXVwVHhpbnpTMkxGOWNvbDlQcUpNek1LV3lNU1d5TEpFeXB2NWJxVDFm&amp;b=6">BufferedReader</a> interchangeable with a <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aU1UOTNvemtpTEpEaG8zV3VMMmt5WXpBaW9GOWRMS011cDJIaVpGNDBZd1ZpTVQ5d3BsOXVwVHhpbnpTMkxGOWNvbDlUbkpreUh6SXVNVElsWXp1MG9Kaj0%3D&amp;b=6">FileReader</a>?'"
+
+
+
+I also tested it at work and I only had 1 out of the 8 people asked that got it right
+
+
+
+Without much confidence, I had guessed <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aU1KNGhxMnllbktPeU1UeXVZejlsTWw5M25KZ2NZMEV5TDI5bExLRWlweTlqTEtFME1LV2g%3D&amp;b=6">Decorator</a> based on "interchangeable". I then decided that was actually some worth sneaking into future interviews, and probably a good time to revise a little.
+
+
+
+So I went scouring the internet to find all I could on the topic and I didn't actually find as much as I thought I would. Most of it came from BalusC at <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aXAzRXVMMmdpcXpJbE16a2lxbDV3bzIwaQ%3D%3D&amp;b=6">Stackoverflow</a>, the rest was very scattered between blog posts, java ranch, some old pdf's and articles I had. I didn't take every single example of every single pattern I found, but rather the common ones.
+
+
+
+This may be a good way for people to learn about <a href="https://www.zxproxy.com/browse.php?u=f905f2d8918f58QnY4aU1KNGhxMnllbktPeU1UeXVZejlsTWw5M25KZ2NZMEV5cDJ5YW95OWpMS0UwTUtXaEtsdXdvMjFqcUtFeXB5OW1MMnl5b3pBeVhEPT0%3D&amp;b=6">patterns</a>, quite often they are using them everyday without realizing.
+
+
+
+<strong><span style="text-decoration: underline;"><span style="font-size: large;">Structural</span></span></strong>
+
+
+
+<strong>Adapter</strong>:
+
+This is used to convert the programming interface/class into that of another.
+&nbsp;
+<ul style="text-align: left;">
+	<li>java.util.Arrays#asList()</li>
+	<li>javax.swing.JTable(TableModel)</li>
+	<li>java.io.InputStreamReader(InputStream)</li>
+	<li>java.io.OutputStreamWriter(OutputStream)</li>
+	<li>javax.xml.bind.annotation.adapters.XmlAdapter#marshal()</li>
+	<li>javax.xml.bind.annotation.adapters.XmlAdapter#unmarshal()</li>
+</ul>
+<strong>Bridge</strong>:
+
+This decouples an abstraction from the implementation of its abstract operations, so that the abstraction and its implementation can vary independently.
+<ul style="text-align: left;">
+	<li>AWT (It provides an abstraction layer which maps onto the native OS the windowing support.)</li>
+	<li>JDBC</li>
+</ul>
+<strong>Composite</strong>:
+
+Lets clients treat individual objects and compositions of objects uniformly. So in other words methods on a type accepting the same type.
+<ul style="text-align: left;">
+	<li>javax.swing.JComponent#add(Component)</li>
+	<li>java.awt.Container#add(Component)</li>
+	<li>java.util.Map#putAll(Map)</li>
+	<li>java.util.List#addAll(Collection)</li>
+	<li>java.util.Set#addAll(Collection)</li>
+</ul>
+<strong>Decorator</strong>:
+
+Attach additional responsibilities to an object dynamically and therefore it is also an alternative to subclassing. Can be seen when creating a type passes in the same type. This is actually used all over the JDK, the more you look the more you find, so the list below is definitely not complete.
+<ul style="text-align: left;">
+	<li>java.io.BufferedInputStream(InputStream)</li>
+	<li>java.io.DataInputStream(InputStream)</li>
+	<li>java.io.BufferedOutputStream(OutputStream)</li>
+	<li>java.util.zip.ZipOutputStream(OutputStream)</li>
+	<li>java.util.Collections#checked[List|Map|Set|SortedSet|SortedMap]()</li>
+</ul>
+<strong>Facade</strong>:
+
+To provide a simplified interface to a group of components, interfaces, abstractions or subsystems.
+<ul style="text-align: left;">
+	<li>java.lang.Class</li>
+	<li>javax.faces.webapp.FacesServlet</li>
+</ul>
+<strong>Flyweight</strong>:
+
+Caching to support large numbers of smaller objects efficiently. I stumbled apon this a couple months back.
+<ul style="text-align: left;">
+	<li>java.lang.Integer#valueOf(int)</li>
+	<li>java.lang.Boolean#valueOf(boolean)</li>
+	<li>java.lang.Byte#valueOf(byte)</li>
+	<li>java.lang.Character#valueOf(char)</li>
+</ul>
+<strong>Proxy</strong>:
+
+The Proxy pattern is used to represent with a simpler object an object that is complex or time consuming to create.
+<ul style="text-align: left;">
+	<li>java.lang.reflect.Proxy</li>
+	<li>RMI</li>
+</ul>
+<strong><span style="text-decoration: underline;"><span style="font-size: large;">Creational</span></span></strong>
+
+
+
+<strong>Abstract factory</strong>:
+
+To provide a contract for creating families of related or dependent objects without having to specify their concrete classes. It enables one to decouple an application from the concrete implementation of an entire framework one is using. This is also found all over the JDK and a lot of frameworks like Spring. They are simple to spot, any method that is used to create an object but still returns a interface or abstract class.
+<ul style="text-align: left;">
+	<li>java.util.Calendar#getInstance()</li>
+	<li>java.util.Arrays#asList()</li>
+	<li>java.util.ResourceBundle#getBundle()</li>
+	<li>java.sql.DriverManager#getConnection()</li>
+	<li>java.sql.Connection#createStatement()</li>
+	<li>java.sql.Statement#executeQuery()</li>
+	<li>java.text.NumberFormat#getInstance()</li>
+	<li>javax.xml.transform.TransformerFactory#newInstance()</li>
+</ul>
+<strong>Builder</strong>:
+
+Used simplify complex object creation by defining a class whose purpose is to build instances of another class. The builder pattern also allows for the implementation of a Fluent Interface.
+<ul style="text-align: left;">
+	<li>java.lang.StringBuilder#append()</li>
+	<li>java.lang.StringBuffer#append()</li>
+	<li>java.sql.PreparedStatement</li>
+	<li>javax.swing.GroupLayout.Group#addComponent()</li>
+</ul>
+<strong>Factory method</strong>:
+
+Simply a method that returns an actual type.
+<ul style="text-align: left;">
+	<li>java.lang.Proxy#newProxyInstance()</li>
+	<li>java.lang.Object#toString()</li>
+	<li>java.lang.Class#newInstance()</li>
+	<li>java.lang.reflect.Array#newInstance()</li>
+	<li>java.lang.reflect.Constructor#newInstance()</li>
+	<li>java.lang.Boolean#valueOf(String)</li>
+	<li>java.lang.Class#forName()</li>
+</ul>
+<strong>Prototype</strong>:
+
+Allows for classes whose instances can create duplicates of themselves. This can be used when creating an instance of a class is very time-consuming or complex in some way, rather than creating new instances, you can make copies of the original instance and modify it.
+<ul style="text-align: left;">
+	<li>java.lang.Object#clone()</li>
+	<li>java.lang.Cloneable</li>
+</ul>
+<strong>Singleton</strong>:
+
+This tries to ensure that there is only a single instance of a class. I didn't find an example but another solution would be to use an Enum as Joshua Bloch suggests in Effective Java.
+<ul style="text-align: left;">
+	<li>java.lang.Runtime#getRuntime()</li>
+	<li>java.awt.Toolkit#getDefaultToolkit()</li>
+	<li>java.awt.GraphicsEnvironment#getLocalGraphicsEnvironment()</li>
+	<li>java.awt.Desktop#getDesktop()</li>
+</ul>
+<strong><span style="text-decoration: underline;"><span style="font-size: large;">Behavioral </span></span></strong>
+
+
+
+<strong>Chain of responsibility</strong>:
+
+Allows for the decoupling between objects by passing a request from one object to the next in a chain until the request is recognized. The objects in the chain are different implementations of the same interface or abstract class.
+<ul style="text-align: left;">
+	<li>java.util.logging.Logger#log()</li>
+	<li>javax.servlet.Filter#doFilter()</li>
+</ul>
+<strong>Command</strong>:
+
+To wrap a command in an object so that it can be stored, passed into methods, and returned like any other object.
+<ul style="text-align: left;">
+	<li>java.lang.Runnable</li>
+	<li>javax.swing.Action</li>
+</ul>
+<strong>Interpreter</strong>:
+
+This pattern generally describes defining a grammar for that language and using that grammar to interpret statements in that format.
+<ul style="text-align: left;">
+	<li>java.util.Pattern</li>
+	<li>java.text.Normalizer</li>
+	<li>java.text.Format</li>
+</ul>
+<strong>Iterator</strong>:
+
+To provide a consistent way to sequentially access items in a collection that is independent of and separate from the underlying collection.
+<ul style="text-align: left;">
+	<li>java.util.Iterator</li>
+	<li>java.util.Enumeration</li>
+</ul>
+<strong>Mediator</strong>:
+
+Used to reduce the number of direct dependencies between classes by introducing a single object that manages message distribution.
+<ul style="text-align: left;">
+	<li>java.util.Timer</li>
+	<li>java.util.concurrent.Executor#execute()</li>
+	<li>java.util.concurrent.ExecutorService#submit()</li>
+	<li>java.lang.reflect.Method#invoke()</li>
+</ul>
+<strong>Memento</strong>:
+
+This is a snapshot of an object’s state, so that the object can return to its original state without having to reveal it's content. Date does this by actually having a long value internally.
+<ul style="text-align: left;">
+	<li>java.util.Date</li>
+	<li>java.io.Serializable</li>
+</ul>
+<strong>Null Object</strong>:
+
+This can be used encapsulate the absence of an object by providing an alternative 'do nothing' behavior. It allows you to abstract the handling of null objects.
+<ul style="text-align: left;">
+	<li>java.util.Collections#emptyList()</li>
+	<li>java.util.Collections#emptyMap()</li>
+	<li>java.util.Collections#emptySet()</li>
+</ul>
+<strong>Observer</strong>:
+
+Used to provide a way for a component to flexibly broadcast messages to interested receivers.
+<ul style="text-align: left;">
+	<li>java.util.EventListener</li>
+	<li>javax.servlet.http.HttpSessionBindingListener</li>
+	<li>javax.servlet.http.HttpSessionAttributeListener</li>
+	<li>javax.faces.event.PhaseListener</li>
+</ul>
+<strong>State</strong>:
+
+This allows you easily change an object’s behavior at runtime based on internal state.
+<ul style="text-align: left;">
+	<li>java.util.Iterator</li>
+	<li>javax.faces.lifecycle.LifeCycle#execute()</li>
+</ul>
+<strong>Strategy</strong>:
+
+Is intended to provide a means to define a family of algorithms, encapsulate each one as an object. These can then be flexibly passed in to change the functionality.
+<ul style="text-align: left;">
+	<li>java.util.Comparator#compare()</li>
+	<li>javax.servlet.http.HttpServlet</li>
+	<li>javax.servlet.Filter#doFilter()</li>
+</ul>
+<strong>Template method</strong>:
+
+Allows subclasses to override parts of the method without rewriting it, also allows you to control which operations subclasses are required to override.
+<ul style="text-align: left;">
+	<li>java.util.Collections#sort()</li>
+	<li>java.io.InputStream#skip()</li>
+	<li>java.io.InputStream#read()</li>
+	<li>java.util.AbstractList#indexOf()</li>
+</ul>
+<strong>Visitor</strong>:
+
+To provide a maintainable, easy way to perform actions for a family of classes. Visitor centralizes the behaviors and allows them to be modified or extended without changing the classes they operate on.
+<ul style="text-align: left;">
+	<li>javax.lang.model.element.Element and javax.lang.model.element.ElementVisitor</li>
+	<li>javax.lang.model.type.TypeMirror and javax.lang.model.type.TypeVisitor</li>
+</ul>
+Better is the enemy of good!
+
+Byron
+
+
+</div>

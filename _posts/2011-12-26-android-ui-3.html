@@ -1,0 +1,128 @@
+---
+layout: post
+title: Android UI开发第三篇——popupwindow
+tags:
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: android-ui%e5%bc%80%e5%8f%91%e7%ac%ac%e4%b8%89%e7%af%87-popupwindow-by-xyz_lmn
+---
+PopupWindow在android.widget包下，弹出窗口的形式展示。官方文档对该控件的描述是：“一个弹出窗口控件，可以用来显示任意视图(View)，而且会浮动在当前 活动(activity)的顶部”。PopupWindow可以让我们实现多种自定义控件，例如：menu、alertdialog等弹窗似的View。
+
+popupwindow需要在onCreate时初始化、通过触发事件展示出来。
+<pre class="brush: java">public class ShowPopupWindow extends Activity implements View.OnClickListener{
+    View view;
+    PopupWindow pop;
+    Button btnShowAsDrawDown;
+    Button btnShowAsDrawDown1;
+    Button btnShowAtLocation;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+       // TODO Auto-generated method stub
+       super.onCreate(savedInstanceState);
+       setContentView(R.layout.popup_activity);
+       btnShowAsDrawDown = (Button)findViewById(R.id.btnShowAsDrawDown);
+       btnShowAsDrawDown.setOnClickListener(this);
+       btnShowAsDrawDown = (Button)findViewById(R.id.btnShowAsDrawDown1);
+       btnShowAsDrawDown.setOnClickListener(this);
+       btnShowAtLocation = (Button)findViewById(R.id.btnShowAt);
+       btnShowAtLocation.setOnClickListener(this);
+       initPopupWindow();
+    }
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        switch(v.getId()){
+        case R.id.btnShowAsDrawDown:
+            if(pop.isShowing()){
+                pop.dismiss();
+            } else {
+                pop.showAsDropDown(v);
+            }
+            break;
+        case R.id.btnShowAsDrawDown1:
+            if(pop.isShowing()){
+                pop.dismiss();
+            } else {
+                pop.showAsDropDown(v, 0, -160);
+            }
+            break;
+            default:
+                if(pop.isShowing()){
+                   pop.dismiss();
+                } else {
+                   pop.showAtLocation(findViewById(R.id.main), Gravity.CENTER_HORIZONTAL, 0, 0);
+                }
+                break;
+        }
+    }
+
+    private void initPopupWindow(){
+        view = this.getLayoutInflater().inflate(R.layout.popup_window, null);
+        pop = new PopupWindow(view, ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        pop.setOutsideTouchable(true);
+        view.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                pop.dismiss();
+            }
+        });
+    }
+}</pre>
+popup_activity.xml
+<pre class="brush: xml">&lt;?xml version=“1.0″ encoding=“utf-8″?&gt;
+&lt;linearLayout xmlns:android=“http://schemas.android.com/apk/res/android”
+    android:orientation=“vertical”
+    android:id=“@+id/main”
+    android:layout_width=“fill_parent”
+    android:layout_height=“fill_parent”&gt;
+&lt;textView
+    android:layout_width=“fill_parent”
+    android:layout_height=“wrap_content”
+    android:text=“pop demo!”
+    /&gt;
+        &lt;button
+            android:id=“@+id/btnShowAsDrawDown”
+            android:layout_width=“fill_parent”
+            android:layout_height=“wrap_content”
+            android:text=“Show as drawndown(one parameter)”
+            /&gt;
+    &lt;button
+            android:id=“@+id/btnShowAsDrawDown1″
+            android:layout_width=“fill_parent”
+            android:layout_height=“wrap_content”
+            android:text=“Show as drawndown(three parameters)”
+            /&gt;
+    &lt;button
+            android:id=“@+id/btnShowAt”
+            android:layout_width=“fill_parent”
+            android:layout_height=“wrap_content”
+            android:text=“Show At Location”
+            /&gt;
+&lt;/linearLayout&gt;</pre>
+popup_window.xml
+<pre class="brush: xml">&lt;?xml version=“1.0″ encoding=“utf-8″?&gt;
+&lt;linearLayout
+  xmlns:android=“http://schemas.android.com/apk/res/android”
+  android:layout_width=“fill_parent”
+  android:layout_height=“fill_parent”
+  android:orientation=“vertical”
+  android:gravity=“center_horizontal”
+  android:background=“#d3d3d3″&gt;
+            &lt;button
+                        android:id=“@+id/btn_pop”
+                        android:layout_width=“wrap_content”
+                        android:layout_height=“wrap_content”
+                        android:text=“Close”
+                        android:layout_margin=“10dip” /&gt;
+&lt;/linearLayout&gt;</pre>
+<div>
+<strong>原创文章，转载请注明：</strong> 转载自<a href="http://blog.devdiv.com/">DEVDIV博客</a>
+<strong>本文链接地址:</strong> <a href="http://blog.devdiv.com/android-ui%e5%bc%80%e5%8f%91%e7%ac%ac%e4%b8%89%e7%af%87%e2%80%94%e2%80%94popupwindow.html">Android UI开发第三篇——popupwindow</a>
+</div>

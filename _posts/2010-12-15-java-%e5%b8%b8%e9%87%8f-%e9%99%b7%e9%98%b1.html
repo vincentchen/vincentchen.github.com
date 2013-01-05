@@ -1,0 +1,17 @@
+---
+layout: post
+title: Java 常量 陷阱
+tags:
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: ''
+---
+项目中有个ws调用,ws地址基本不会变,又好几个地方用到,就单独定义在工具类中.
+结果某个环境只能通过防火墙映射访问改ws.就需要将该WS地址改成内网地址.
+问题来了,改了Constants.java中的定义,没有重新编译用到该常量的类.
+由于java编译器优化,会把常量直接替换到使用的地方.
+该问题找了好久......

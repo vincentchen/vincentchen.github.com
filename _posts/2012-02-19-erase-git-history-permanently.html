@@ -1,0 +1,28 @@
+---
+layout: post
+title: 彻底删除Git文件历史记录的办法
+tags:
+- git
+- VCS
+status: publish
+type: post
+published: true
+meta:
+  _wp_old_slug: ! '%e5%bd%bb%e5%ba%95%e5%88%a0%e9%99%a4git%e6%96%87%e4%bb%b6%e5%8e%86%e5%8f%b2%e8%ae%b0%e5%bd%95%e7%9a%84%e5%8a%9e%e6%b3%95'
+  _edit_last: '1'
+---
+git filter-branch --index-filter 'git rm -r --cached --ignore-unmatch path/to/your/file' HEAD
+
+git push origin master --force
+
+rm -rf .git/refs/original/
+
+git reflog expire --expire=now --all
+
+git gc --prune=now
+
+git gc --aggressive --prune=now
+
+&nbsp;
+
+See <a href="http://help.github.com/remove-sensitive-data/">http://help.github.com/remove-sensitive-data/</a>

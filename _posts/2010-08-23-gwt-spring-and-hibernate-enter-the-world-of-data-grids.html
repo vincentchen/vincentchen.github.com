@@ -1,0 +1,243 @@
+---
+layout: post
+title: GWT Spring and Hibernate enter the world of Data Grids
+tags:
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _oembed_277d2f94062ca586c3d4a035bf8d4b00: ! '{{unknown}}'
+  _oembed_9e7c0cf2095573f9a38365769d311e2e: ! '{{unknown}}'
+  _wp_old_slug: ''
+  _oembed_093fe4c46d220f5eaabe22716e5212e8: ! '{{unknown}}'
+  _oembed_e0b426977df9656eefef5df28d86f56e: ! '{{unknown}}'
+  _edit_last: '1'
+---
+<a href="http://www.javacodegeeks.com/2010/06/gwt-spring-and-hibernate-enter-world-of.html">被伟大的墙墙了，在这里留一份</a>
+Maximize <a href="http://www.hibernate.org/">Hibernate</a> performance with the power of <a href="http://www.jboss.org/infinispan">Infinispan</a> Data Grid. A <a href="http://code.google.com/webtoolkit/">GWT</a>,<a href="http://www.springsource.org/">Spring</a>, <a href="http://java.sun.com/developer/technicalArticles/J2EE/jpa/">JPA</a>, <a href="http://www.hibernate.org/">Hibernate</a>, <a href="http://www.jboss.org/infinispan">Infinispan</a> integration tutorial.
+
+<a name="more"></a>In this tutorial we are going to discuss about how you can use <a href="http://www.jboss.org/infinispan">Infinispan</a> as a<a href="http://www.hibernate.org/">Hibernate</a> second level cache provider. <a href="http://www.jboss.org/infinispan">Infinispan</a> is the successor of <a href="http://www.jboss.org/jbossas">JBoss</a> cache and the company's flagship towards the open source data grids domain. To make things more interesting we are going to continue from where we left of at our <a href="http://javacodegeeks.blogspot.com/2010/05/gwt-2-spring-3-jpa-2-hibernate-35.html">previous article</a>about <a href="http://www.springsource.org/">Spring</a> <a href="http://code.google.com/webtoolkit/">GWT</a> <a href="http://www.hibernate.org/">Hibernate</a> and <a href="http://java.sun.com/developer/technicalArticles/J2EE/jpa/">JPA</a> integration. We are going to use our<a href="http://dl.dropbox.com/u/7215751/JavaCodeGeeks/GWTSpringTutorial/GWTSpringProject.zip">GWTSpring project</a> and empower it with data grid functionality!
+
+Hiberante supports <a href="http://www.jboss.org/infinispan">Infinispan</a> as a second level cache provider from version 3.5 an on, we are going to use <a href="http://www.hibernate.org/">Hibernate</a> version 3.5.2 and <a href="http://www.jboss.org/infinispan">Infinispan</a> version 4.0.0. You can download <a href="http://www.jboss.org/infinispan">Infinispan</a> binary distribution <a href="http://sourceforge.net/projects/infinispan/files/">here</a>
+
+It is highly recommended that <a href="http://www.hibernate.org/">Hibernate</a> is configured to use <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> transactions so that both <a href="http://www.hibernate.org/">Hibernate</a> and <a href="http://www.jboss.org/infinispan">Infinispan</a> cooperate within the same transaction. Otherwise, operations on the database and the second level cache will not be treated as a single unit of work. Risks here include failures to update the second level cache leaving it with stale data while the database committed data correctly.
+
+Due to the fact that we are deploying our Web application to a standalone environment (<a href="http://tomcat.apache.org/">Apache – Tomcat</a>) and not to a full blown, <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> enabled, application server, to comply with the aforementioned requirements, we are going to realize the <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> environment within <a href="http://www.springsource.org/">Spring</a> framework. To do so we need a <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> compliant transaction manager and our preference is <a href="http://www.atomikos.com/">Atomikos</a>. Of course you can use any <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> compliant transaction manager you prefer. We will use <a href="http://www.atomikos.com/">Atomikos</a> Transactions Essentials version 3.6.5 that you can download from <a href="http://www.atomikos.com/Main/TransactionsEssentialsDownloadForm">here</a>
+
+Last but not least we will need <a href="http://www.mysql.com/">MySQL</a> Connector/J to connect to a <a href="http://www.mysql.com/">MySQL</a> database for testing. Version 3.6.5 of <a href="http://www.atomikos.com/">Atomikos</a> Transactions Essentials is being tested and works well with <a href="http://www.mysql.com/">MySQL</a> Connector/J version 5.1.5 which you can download from <a href="http://ftp.ku.ac.th/pub/mirror/mysql/downloads/connector/j/5.1.html">here</a>
+
+In order to properly integrate <a href="http://www.jboss.org/infinispan">Infinispan</a> and <a href="http://www.hibernate.org/">Hibernate</a> at runtime, we must provide all necessary libraries to the Web application. So copy the files listed below under /war/WEB-INF/lib (copy the relevant files if you are using different versions)
+
+From <a href="http://www.jboss.org/infinispan">Infinispan</a> binary distribution
+<ul>
+	<li>infinispan-core.jar</li>
+	<li>/lib/jboss-common-core-2.2.14.GA.jar</li>
+	<li>/lib/jcip-annotations-1.0.jar</li>
+	<li>/lib/jgroups-2.9.0.GA.jar</li>
+	<li>/lib/marshalling-api-1.2.0.GA.jar</li>
+	<li>/lib/rhq-pluginAnnotations-1.4.0.B01.jar</li>
+	<li>/lib/river-1.2.0.GA.jar</li>
+</ul>
+From <a href="http://www.atomikos.com/">Atomikos</a> Transactions Essentials distribution
+<ul>
+	<li>/dist/transactions-essentials-all.jar</li>
+	<li>/lib/jca.jar</li>
+	<li>/lib/jms.jar</li>
+	<li>/lib/jmx.jar</li>
+</ul>
+The <a href="http://www.mysql.com/">MySQL</a> Connector/J
+<ul>
+	<li>mysql-connector-java-5.1.5-bin.jar</li>
+</ul>
+Finally, for <a href="http://www.atomikos.com/">Atomikos</a> to work properly at runtime, a “jta.properties” file must be located on the classpath of our Web application. Create a text file named “jta.properties”, place it under /resources package of the <a href="http://www.eclipse.org/">Eclipse</a> project and populate it with the properties shown below :
+<pre>com.atomikos.icatch.service=com.atomikos.icatch.standalone.UserTransactionServiceFactory
+com.atomikos.icatch.force_shutdown_on_vm_exit = true
+com.atomikos.icatch.automatic_resource_registration = false
+com.atomikos.icatch.console_log_level = INFO</pre>
+We now have to take care of dependences for our <a href="http://www.eclipse.org/">Eclipse</a> project. The following jars should be included in the Java build path of the project :
+<ul>
+	<li> hibernate3.jar</li>
+</ul>
+Next step is to configure <a href="http://www.hibernate.org/">Hibernate</a> to use <a href="http://www.mysql.com/">MySQL</a> dialect and second level cache. Locate the persistence.xml file under /resources/META-INF folder, and perform the changes described below :
+
+To use <a href="http://www.mysql.com/">MySQL</a> dialect add the following property :
+<pre class="brush: xml">&lt;property name=&quot;hibernate.dialect&quot; value=&quot;org.hibernate.dialect.MySQL5InnoDBDialect&quot; /&gt;</pre>
+To configure the transaction manager to use add the following properties :
+<pre class="brush: xml">&lt;property name=&quot;hibernate.transaction.manager_lookup_class&quot; value=&quot;com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup&quot; /&gt;</pre>
+To enable <a href="http://www.hibernate.org/">Hibernate</a> second level cache with query result caching enabled you should add the following properties :
+<pre class="brush: xml">&lt;property name=&quot;hibernate.cache.use_second_level_cache&quot; value=&quot;true&quot;/&gt;
+&lt;property name=&quot;hibernate.cache.use_query_cache&quot; value=&quot;true&quot;/&gt;</pre>
+At this point we have to pinpoint that enabling query result caching may not improve performance especially if your application performs queries that mainly return unique results.
+
+To configure the <a href="http://www.jboss.org/infinispan">Infinispan</a> cache region factory add the following property :
+<pre class="brush: xml">&lt;property name=&quot;hibernate.cache.region.factory_class&quot;
+ value=&quot;org.hibernate.cache.infinispan.InfinispanRegionFactory&quot;/&gt;</pre>
+We can also configure an eviction policy (here Least Recently Used – LRU) by adding the following properties :
+<pre class="brush: xml">&lt;property name=&quot;hibernate.cache.infinispan.entity.eviction.strategy&quot;
+ value= &quot;LRU&quot;/&gt;
+&lt;property name=&quot;hibernate.cache.infinispan.entity.eviction.wake_up_interval&quot;
+ value= &quot;2000&quot;/&gt;
+&lt;property name=&quot;hibernate.cache.infinispan.entity.eviction.max_entries&quot;
+ value= &quot;5000&quot;/&gt;
+&lt;property name=&quot;hibernate.cache.infinispan.entity.expiration.lifespan&quot;
+ value= &quot;60000&quot;/&gt;
+&lt;property name=&quot;hibernate.cache.infinispan.entity.expiration.max_idle&quot;
+ value= &quot;30000&quot;/&gt;</pre>
+By using an eviction policy we prevent the second level cache from consuming all available memory heap by unconditionally caching objects. The Least Recently Used eviction policy evicts entries based on how often they are used. This in our case the following rules will be applied :
+<ul>
+	<li>The “wake_up_interval” property defines how often a controller process will scan second level cache for candidate eviction entries (here every 2 seconds)</li>
+	<li>The “max_entries” property defines the maximum number of cache entries</li>
+	<li>The “lifespan” property defines the maximum amount of time an object can be kept in cache. If the lifespan of an object is reached then the object is evicted regardless of how often is accessed (here 1 minute)</li>
+	<li>The “max_idle” property defines the maximum amount of time an object can be idle (not accessed) before evicted (here 30 seconds)</li>
+</ul>
+Finally we must change the “persistence-unit” “transaction-type” attribute to <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a>
+
+The complete persistence.xml file should look like the one provided below :
+<pre class="brush: xml">&lt;persistence xmlns=&quot;http://java.sun.com/xml/ns/persistence&quot;
+xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+xsi:schemaLocation=&quot;http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd&quot;
+version=&quot;2.0&quot;&gt;
+
+ &lt;persistence-unit name=&quot;MyPersistenceUnit&quot; transaction-type=&quot;JTA&quot;&gt;
+  &lt;provider&gt;org.hibernate.ejb.HibernatePersistence&lt;/provider&gt;
+
+  &lt;properties&gt;
+   &lt;property name=&quot;hibernate.hbm2ddl.auto&quot; value=&quot;update&quot; /&gt;
+   &lt;property name=&quot;hibernate.show_sql&quot; value=&quot;false&quot; /&gt;
+   &lt;property name=&quot;hibernate.dialect&quot; value=&quot;org.hibernate.dialect.MySQL5InnoDBDialect&quot; /&gt;
+
+   &lt;property name=&quot;hibernate.transaction.manager_lookup_class&quot; value=&quot;com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup&quot; /&gt;
+
+   &lt;property name=&quot;hibernate.cache.use_second_level_cache&quot; value=&quot;true&quot;/&gt;
+   &lt;property name=&quot;hibernate.cache.use_query_cache&quot; value=&quot;true&quot;/&gt;
+   &lt;property name=&quot;hibernate.cache.region.factory_class&quot; value=&quot;org.hibernate.cache.infinispan.InfinispanRegionFactory&quot;/&gt;
+   &lt;!--
+   &lt;property name=&quot;hibernate.cache.infinispan.entity.eviction.strategy&quot; value= &quot;LRU&quot;/&gt;
+   &lt;property name=&quot;hibernate.cache.infinispan.entity.eviction.wake_up_interval&quot; value= &quot;2000&quot;/&gt;
+   &lt;property name=&quot;hibernate.cache.infinispan.entity.eviction.max_entries&quot; value= &quot;5000&quot;/&gt;
+   &lt;property name=&quot;hibernate.cache.infinispan.entity.expiration.lifespan&quot; value= &quot;60000&quot;/&gt;
+   &lt;property name=&quot;hibernate.cache.infinispan.entity.expiration.max_idle&quot; value= &quot;30000&quot;/&gt;
+   --&gt;
+
+  &lt;/properties&gt;
+
+ &lt;/persistence-unit&gt;
+
+&lt;/persistence&gt;</pre>
+The next step is to configure <a href="http://www.springsource.org/">Spring</a> regarding the <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> datasource, <a href="http://www.atomikos.com/">Atomikos</a>transaction manager and <a href="http://java.sun.com/developer/technicalArticles/J2EE/jpa/">JPA</a>/<a href="http://www.hibernate.org/">Hibernate</a>. Locate your applicationContext.xml file under /war/WEB-INF/ and alter it as follows :
+<pre class="brush: xml">&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+ xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:p=&quot;http://www.springframework.org/schema/p&quot;
+ xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot; xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+ xmlns:jee=&quot;http://www.springframework.org/schema/jee&quot; xmlns:tx=&quot;http://www.springframework.org/schema/tx&quot;
+ xmlns:task=&quot;http://www.springframework.org/schema/task&quot;
+ xsi:schemaLocation=&quot;
+  http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+  http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+  http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+  http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+  http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd&quot;&gt;
+
+ &lt;context:component-scan base-package=&quot;com.javacodegeeks.gwtspring&quot; /&gt;
+
+ &lt;task:annotation-driven executor=&quot;myExecutor&quot;
+ scheduler=&quot;myScheduler&quot; /&gt;
+
+ &lt;task:executor id=&quot;myExecutor&quot; pool-size=&quot;5&quot; /&gt;
+
+ &lt;task:scheduler id=&quot;myScheduler&quot; pool-size=&quot;10&quot; /&gt;
+
+ &lt;tx:annotation-driven /&gt;
+
+ &lt;bean id=&quot;entityManagerFactory&quot;
+ &gt;
+  &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot; /&gt;
+  &lt;property name=&quot;jpaVendorAdapter&quot;&gt;
+   &lt;bean /&gt;
+  &lt;/property&gt;
+ &lt;/bean&gt;
+
+ &lt;bean id=&quot;dataSource&quot;
+  init-method=&quot;init&quot; destroy-method=&quot;close&quot;&gt;
+  &lt;property name=&quot;uniqueResourceName&quot; value=&quot;javacodegeeks&quot; /&gt;
+  &lt;property name=&quot;xaDataSourceClassName&quot;
+   value=&quot;com.mysql.jdbc.jdbc2.optional.MysqlXADataSource&quot; /&gt;
+  &lt;property name=&quot;xaProperties&quot;&gt;
+   &lt;props&gt;
+    &lt;prop key=&quot;URL&quot;&gt;jdbc:mysql://localhost:3306/javacodegeeks&lt;/prop&gt;
+    &lt;prop key=&quot;user&quot;&gt;***&lt;/prop&gt;
+    &lt;prop key=&quot;password&quot;&gt;***&lt;/prop&gt;
+   &lt;/props&gt;
+  &lt;/property&gt;
+  &lt;property name=&quot;maxPoolSize&quot; value=&quot;50&quot; /&gt;
+  &lt;property name=&quot;minPoolSize&quot; value=&quot;20&quot; /&gt;
+ &lt;/bean&gt;
+
+ &lt;bean id=&quot;atomikosTransactionManager&quot;
+  init-method=&quot;init&quot; destroy-method=&quot;close&quot;&gt;
+  &lt;property name=&quot;forceShutdown&quot; value=&quot;false&quot; /&gt;
+ &lt;/bean&gt;
+
+ &lt;bean id=&quot;atomikosUserTransaction&quot;&gt;
+  &lt;property name=&quot;transactionTimeout&quot; value=&quot;300&quot; /&gt;
+ &lt;/bean&gt;
+
+ &lt;bean id=&quot;transactionManager&quot;
+
+  depends-on=&quot;atomikosTransactionManager,atomikosUserTransaction&quot;&gt;
+  &lt;property name=&quot;transactionManager&quot; ref=&quot;atomikosTransactionManager&quot; /&gt;
+  &lt;property name=&quot;userTransaction&quot; ref=&quot;atomikosUserTransaction&quot; /&gt;
+  &lt;property name=&quot;allowCustomIsolationLevels&quot; value=&quot;true&quot; /&gt;
+ &lt;/bean&gt;
+
+&lt;/beans&gt;</pre>
+Things to notice here :
+<ul>
+	<li><a href="http://www.springsource.org/">Spring</a> Entity Manager Factory holds references to the datasource and the <a href="http://java.sun.com/developer/technicalArticles/J2EE/jpa/">JPA</a>provider in order to properly provide ORM functionality to our DAOs</li>
+	<li>The datasource is configured as an XA resource. This is mandatory in order for<a href="http://www.jboss.org/infinispan">Infinispan</a> and the database to participate in the same transactions, as described above. You must change “xaProperties” URL, user and password property values according to your database configuration.</li>
+	<li>We configure <a href="http://www.springsource.org/">Spring</a> to use the <a href="http://java.sun.com/javaee/technologies/jta/">JTA</a> compliant <a href="http://www.atomikos.com/">Atomikos</a> transaction manager.</li>
+</ul>
+We are almost done!
+
+To make an entity cachable, we only have to annotate it as such. Locate the EmployeeDTO object under /shared/dto package and add the @Cache annotation as shown below :
+<pre class="brush: java">… import statements here …
+
+@Cache (usage=CacheConcurrencyStrategy.TRANSACTIONAL)
+@Entity
+@Table(name = &quot;EMPLOYEE&quot;)
+public class EmployeeDTO implements java.io.Serializable {
+
+ private static final long serialVersionUID = 7440297955003302414L;
+
+…
+
+}</pre>
+Things to notice here :
+<ul>
+	<li>We dictate the Cache Concurrency Strategy as “TRANSACTIONAL” because we want to perform not only retrieve but also create/update/delete operations on the cached object.</li>
+</ul>
+Thats it! To deploy the web application just copy the /war folder in Apache – Tomact “webapps” folder. You can change the name of the war folder to whatever you like, preferably rename it after the project name e.g. GWTSpringInfinispan
+
+Prior lunching the application do not forget to create the database schema, here “javacodegeeks”.
+
+To lunch the application point your browser to the following address
+
+http://localhost:8080/GWTSpringInfinispan/
+
+If all went well you should see your main web page. Two text boxes should be displayed followed by a button each. In the first text box you can save or update an employee to the database. Provide as input the id, the name, the surname, and a job description separated by a space character. Clicking on the “SaveOrUpdate” button the provided information will be stored to the database. For existing employee entries (same id) an update will be performed. The second text box is used to retrieve existing employee entries. Provide an employee id and click on the “Retrieve” button. If the employee exists you should see the employee id, name, surname and job description.
+
+<a href="http://www.atomikos.com/">Atomikos</a> transaction manager is configured to produce log records at INFO level (see “jta.properties” file above). The log file is located inside the bin directory of your<a href="http://tomcat.apache.org/">Apache – Tomcat</a> installation. Open the file and observe the queries performed to the database. What you should expect is the following :
+<ul>
+	<li>Perform a retrieve operation on an employee for the first time. The employee object is not cached and a query is performed against the database. The employee object should now be cached</li>
+	<li>Perform a second retrieve operation for the same employee. No query should be performed now. Data is retrieved from <a href="http://www.jboss.org/infinispan">Infinispan</a></li>
+	<li>Perform an update operation on the same employee. Update operations are performed to both <a href="http://www.jboss.org/infinispan">Infinispan</a> and the database in a single unit of work</li>
+	<li>Perform a third query for the same employee. No query should be performed against the database and you should see the updated data from the previous step!</li>
+</ul>
+You can download the project from <a href="http://dl.dropbox.com/u/7215751/JavaCodeGeeks/GWTSpringInfinispanTutorial/GWTSpringInfinispanProject.zip">here</a> (required 3rd party libraries as described at the beginning and previous articles are not included)
+
+
+Have Fun!
+
+
+Justin

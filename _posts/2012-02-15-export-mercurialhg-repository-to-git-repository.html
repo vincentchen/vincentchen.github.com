@@ -1,0 +1,21 @@
+---
+layout: post
+title: Export Mercurial(Hg) repository to git repository
+tags:
+- git
+- VCS
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+<ol>
+	<li>git clone git://repo.or.cz/fast-export.git</li>
+	<li>mkdir new_git_repo</li>
+	<li>cd new_git_repo</li>
+	<li>git init</li>
+	<li>/path/to/hg-fast-export.sh -r /path/to/hg_repo #hg-fast-export.sh in the clone of step 1</li>
+	<li>git repack -a -d -f</li>
+	<li>git checkout BRANCH_NAME # BRANCH_NAME is the name of Hg branch, in my case it was ‘trunk’</li>
+</ol>

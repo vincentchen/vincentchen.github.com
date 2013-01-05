@@ -1,0 +1,151 @@
+---
+layout: post
+title: Android UI开发第一篇——Android九宫格的实现及九宫格源码
+tags:
+- android
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+今天在坛子里看到有坛友问到九宫格的实现，我把我在项目中用的经验分享一下，九宫格用gridview实现代码如下：
+xml代码：
+<pre class="brush: xml">&lt;?xml version=“1.0″ encoding=“utf-8″?&gt;
+&lt;linearLayout xmlns:android=“http://schemas.android.com/apk/res/android”
+     xmlns:app=“http://schemas.android.com/apk/res/com.google.android.gx5weather”
+     android:orientation=“vertical”
+     android:layout_width=“fill_parent”
+     android:layout_height=“fill_parent”
+     android:layout_weight=“1.0″
+     android:background=“@drawable/bg”&gt;
+&lt;imageView android:id=“@+id/ImageView01″
+           android:layout_width=“wrap_content”
+           android:layout_height=“wrap_content”
+           android:layout_gravity=“center_vertical”
+           android:background=“@drawable/top”&gt;&lt;/imageView&gt;
+&lt;gridView xmlns:android=“http://schemas.android.com/apk/res/android”
+    android:id=“@+id/gridview”
+    android:layout_width=“wrap_content”
+    android:layout_height=“wrap_content”
+    android:numColumns=“3″
+    android:verticalSpacing=“30dip”
+    android:horizontalSpacing=“10dip”
+    android:columnWidth=“90dip”  //列宽
+    android:stretchMode=“columnWidth”
+    android:gravity=“center”
+    android:listSelector=“@drawable/grid_selector_background”&gt;
+&lt;/gridView&gt;
+&lt;/linearLayout&gt;</pre>
+android:numColumns=”3″ //九宫格的列数  auto_fit时为自动
+android:listSelector=”@drawable/grid_selector_background”   //九宫格的背景，可以找个圆角正方形
+<pre class="brush: java">public class NineBox extends Activity {
+    /** Called when the activity is first created. */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        setContentView(R.layout.main_activity);
+        GridView gridview=(GridView)findViewById(R.id.gridview);
+        ArrayList&lt;hashMap&lt;string, Object&gt;&gt; lstImageItem = new ArrayList&lt;hashMap&lt;string, Object&gt;&gt;();
+        for(int i=1;i&lt;10;i++) {
+            HashMap&lt;string, Object&gt; map = new HashMap&lt;string, Object&gt;();
+            if(i==1){
+               map.put(“ItemImage”, R.drawable.g11);
+               map.put(“ItemText”, getResources().getString(R.string.gridview1));
+            }
+            if(i==2){
+                map.put(“ItemImage”, R.drawable.g12);
+                map.put(“ItemText”, getResources().getString(R.string.gridview2));
+            }
+            if(i==3){
+                map.put(“ItemImage”, R.drawable.g13);
+                map.put(“ItemText”, getResources().getString(R.string.gridview3));
+            }
+            if(i==4){
+                map.put(“ItemImage”, R.drawable.g14);
+                map.put(“ItemText”, getResources().getString(R.string.gridview4));
+            }
+            if(i==5){
+                map.put(“ItemImage”, R.drawable.g15);
+                map.put(“ItemText”, getResources().getString(R.string.gridview5));
+            }
+            if(i==6){
+                map.put(“ItemImage”, R.drawable.g16);
+                map.put(“ItemText”, getResources().getString(R.string.gridview6));
+            }
+            if(i==7){
+                map.put(“ItemImage”, R.drawable.g17);
+                map.put(“ItemText”, getResources().getString(R.string.gridview7));
+            }
+            if(i==8){
+                map.put(“ItemImage”, R.drawable.g18);
+                map.put(“ItemText”, getResources().getString(R.string.gridview8));
+            }
+            if(i==9){
+                map.put(“ItemImage”, R.drawable.g19);
+                map.put(“ItemText”, getResources().getString(R.string.gridview9));
+            }
+            lstImageItem.add(map);
+        }
+
+        SimpleAdapter saImageItems = new SimpleAdapter(this,
+                                                  lstImageItem,
+                                                  R.layout.grid_item,
+                                                  new String[] {“ItemImage”,“ItemText”},
+                                                  new int[] {R.id.ItemImage,R.id.ItemText});
+
+        gridview.setAdapter(saImageItems);
+        gridview.setOnItemClickListener(new ItemClickListener());
+    }
+
+    class  ItemClickListener implements OnItemClickListener{
+        @SuppressWarnings(“unchecked”)
+        public void onItemClick(AdapterView&lt;?&gt; arg0,//The AdapterView where the click happened
+                                      View arg1,//The view within the AdapterView that was clicked
+                                      int arg2,//The position of the view in the adapter
+                                      long arg3//The row id of the item that was clicked
+                                    ) {
+            HashMap&lt;string, Object&gt; item=(HashMap&lt;string, Object&gt;) arg0.getItemAtPosition(arg2);
+
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview1))){
+                    Toast.makeText(NineBox.this, R.string.gridview1, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview2))){
+                    Toast.makeText(NineBox.this, R.string.gridview2, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview3))){
+                    Toast.makeText(NineBox.this, R.string.gridview3, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview4))){
+                    Toast.makeText(NineBox.this, R.string.gridview4, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview5))){
+                    Toast.makeText(NineBox.this, R.string.gridview5, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview6))){
+                    Toast.makeText(NineBox.this, R.string.gridview6, Toast.LENGTH_LONG).show();
+            }
+
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview7))){
+                    Toast.makeText(NineBox.this, R.string.gridview7, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview8))){
+                    Toast.makeText(NineBox.this, R.string.gridview8, Toast.LENGTH_LONG).show();
+            }
+            if(item.get(“ItemText”).equals(getResources().getString(R.string.gridview9))){
+                    Toast.makeText(NineBox.this, R.string.gridview9, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+}</pre>
+显示效果如下：
+[flickr id="7002373033" thumbnail="small" overlay="true" size="medium" group="old" align="center"] 
+代码下载：
+<a href="http://www.devdiv.com/blog/wp-content/uploads/2011/12/NineBox.rar_.zip">NineBox.rar</a>
+<strong>原创文章，转载请注明：</strong> 转载自<a href="http://blog.devdiv.com/">DEVDIV博客</a>
+<strong>本文链接地址:</strong> <a href="http://blog.devdiv.com/xyz_lmn%e5%88%86%e4%ba%abandroid%e4%b9%9d%e5%ae%ab%e6%a0%bc%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%8f%8a%e4%b9%9d%e5%ae%ab%e6%a0%bc%e6%ba%90%e7%a0%81.html">Android UI开发第一篇——Android九宫格的实现及九宫格源码</a> 

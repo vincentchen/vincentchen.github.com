@@ -1,0 +1,73 @@
+---
+layout: post
+title: 配置Apache SSL 转发
+tags:
+- web
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: ''
+---
+配置SSL
+参考：http://tud.at/programm/apache-ssl-win32-howto.php3
+
+1 安装apache
+apache_2.2.11-win32-x86-openssl-0.9.8i.msi
+按照提示一步一步，安装即可。
+*下文中用{apache}代表apache安装目录，本例中是：D:/devel/apache2.2/
+
+2 配置SSL
+(1)apache_2.2.11-win32-x86-openssl-0.9.8i.msi已经安装了 OpenSSL and mod_ssl
+
+(2)下载OpenSSL配置文件
+openssl.cnf，下载文件，保存到{apache}\bin下
+
+(3)生成证书
+Command代码
+<code>openssl req -config openssl.cnf -new -out my-server.csr
+openssl rsa -in privkey.pem -out my-server.key
+openssl x509 -in my-server.csr -out my-server.cert -req -signkey my-server.key -days 365</code>
+
+第一条命令提示比较多，大概的输入些数据就可以了。
+“密码”必须输入；
+“Common Name (eg, your websites domain name) []:”也必须输入，没有域名就随便写一个。
+
+(4)配置SSL
+去除conf/httpd.conf下面两句的注释，使之生效：
+Apache config代码
+<code>LoadModule ssl_module modules/mod_ssl.so
+Include conf/extra/httpd-ssl.conf </code>
+
+复制{apache}目录下的， 上述生成的文件：
+<code>bin/my-server.cert =&gt; conf/ssl/my-server.cert
+bin/my-server.key =&gt; conf/ssl/my-server.key </code>
+
+修改conf/extra/httpd-ssl.conf
+Apache config代码
+<code>SSLCertificateFile "D:/devel/apache2.2/conf/server.crt" =&gt;
+SSLCertificateFile "D:/devel/apache2.2/conf/ssl/my-server.cert"
+SSLCertificateKeyFile "D:/devel/apache2.2/conf/server.key" =&gt;
+SSLCertificateKeyFile "D:/devel/apache2.2/conf/ssl/my-server.key" </code>
+
+现在SSL配置完成。下面配置代理
+
+配置代理
+去除conf/httpd.conf下面两句的注释，使之生效：
+Apache config代码
+<code>LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_connect_module modules/mod_proxy_connect.so
+LoadModule proxy_http_module modules/mod_proxy_http.so </code>
+
+在conf/httpd.conf结尾添加如下配置：
+Apache config代码
+<code>ProxyRequests Off
+Order deny,allow
+Allow from all
+ProxyPass / https://{those_compute_ip}/
+ProxyPassReverse / https://{those_compute_ip}/ </code>
+
+修改conf/extra/httpd-ssl.conf，添加
+Apache config代码
+<code>SSLProxyEngine on </code>

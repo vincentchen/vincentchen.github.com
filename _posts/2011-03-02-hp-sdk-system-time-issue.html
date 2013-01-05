@@ -1,0 +1,27 @@
+---
+layout: post
+title: HP SDK 系统时间获取问题
+tags:
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: ''
+---
+Since SDK 1.2.2.09 and SDK 1.3.1, there has been a change in the way the HotSpot JVM uses the gettimeofday()
+system call to obtain date and time information.
+
+For performance reasons a new mechanism is used that uses the number of cpu ticks since the application started,
+to calculate the current time.
+
+As a result, changes to the system date or time using date(1), adjtime(2) or time synchronization utilities
+such as ntp will not be reflected in the date and time that Java returns, until the process is restarted.
+If your application requires that Java immediately reflects such system time changes,
+you can use the -XX:+UseGetTimeOfDay option to tell the JVM to use the gettimeofday call instead of the new,
+lightweight mechanism. However you may notice a drop in performance.
+
+上面说的意思大致是，HP-UX  SDK 1.2.2.09 和HP-UX  SDK 1.3.1之后，由于performance的原因，JVM中读取系统时间的时候，是在应用程序启动之后，读一次OS的系统时间，然后JVM中根据CPU ticks来自己计算时间，而不是实时地去OS 取系统时间。这样的话，在应用程序运行当中，如果有ntp改变了OS的系统时间，那么JVM和OS的系统时间就不一致了。只有等下一次应用程序重新启动的时候，JVM才会重新读取OS系统时间。
+
+解决方案就是启动应用程序的时候，用-XX:+UseGetTimeOfDay参数，虽然这会导致performancex下降，但是可以保证JVM和OS的系统时间一致。

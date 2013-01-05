@@ -1,0 +1,102 @@
+---
+layout: post
+title: Android UI开发第四篇——实现像handcent sms或者chomp sms那样的气泡短信样式
+tags:
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _wp_old_slug: android-ui%e5%bc%80%e5%8f%91%e7%ac%ac%e5%9b%9b%e7%af%87-%e5%ae%9e%e7%8e%b0%e5%83%8fhandcent-sms%e6%88%96%e8%80%85chomp-sms%e9%82%a3%e6%a0%b7%e7%9a%84%e6%b0%94%e6%b3%a1%e7%9f%ad
+  _edit_last: '1'
+---
+今晚有点时间把断了很长时间的UI开发补一下，这次实现的是像handcent sms或者chomp sms那样的气泡短信样式。实现这种效果的重点是ListView的divider和listSelector。先看一下效果图
+
+[flickr id="6856253222" thumbnail="small" overlay="true" size="medium" group="" align="center"] 
+
+给代码：
+
+（1）listview：
+<pre class="brush: xml">&lt;!--?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?--&gt;
+&lt;linearlayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;
+                  android:orientation=&quot;vertical&quot;
+                  android:layout_width=&quot;fill_parent&quot;
+                  android:layout_height=&quot;fill_parent&quot;
+                  android:background=&quot;@android:color/white&quot;&gt;
+        &lt;listview android:layout_width=&quot;fill_parent&quot;
+                  android:layout_height=&quot;fill_parent&quot;
+                  android:divider=&quot;@null&quot;
+                  android:dividerheight=&quot;0dip&quot;
+                  android:cachecolorhint=&quot;#00000000&quot;
+                  android:listselector=&quot;@drawable/list_item_style&quot;
+                  android:id=&quot;@+id/itemlist&quot;&gt;
+        &lt;/listview&gt;
+&lt;/linearlayout&gt;</pre>
+（2）ListView item
+<pre class="brush: xml">&lt;?xml version=“1.0″ encoding=“utf-8″?&gt;
+&lt;linearLayout
+  xmlns:android=“http://schemas.android.com/apk/res/android”
+  android:layout_width=“wrap_content”
+  android:layout_height=“wrap_content”&gt;
+
+&lt;textView android:id=“@+id/TextView01″
+       android:layout_width=“wrap_content”
+       android:layout_height=“wrap_content”
+       android:textColor=“@android:color/black”
+       android:background=“@drawable/bg”&gt;&lt;/textView&gt;
+&lt;/linearLayout&gt;</pre>
+（3）java：
+<pre class="brush: java">public class HandcentList extends Activity {
+    /** Called when the activity is first created. */
+        ListView itemlist = null;
+        List&lt;map&lt;string, Object&gt;&gt; list;
+
+        final String[] str={“A”,“B”,“C”,“D”,“E”,“F”};
+        /** Called when the activity is first created. */
+
+        public void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.main);
+                itemlist = (ListView) findViewById(R.id.itemlist);
+                refreshListItems();
+        }
+        private void refreshListItems() {
+                list = buildListForSimpleAdapter();
+                SimpleAdapter notes = new SimpleAdapter(this, list, R.layout.item,
+                                new String[] { “str” }, new int[] { R.id.TextView01,});
+                itemlist.setAdapter(notes);
+                itemlist.setSelection(0);
+        }
+        private List&lt;map&lt;string, Object&gt;&gt; buildListForSimpleAdapter() {
+                List&lt;map&lt;string, Object&gt;&gt; list = new ArrayList&lt;map&lt;string, Object&gt;&gt;(2);
+                // Build a map for the attributes
+                Map&lt;string, Object&gt; map = new HashMap&lt;string, Object&gt;();
+                map.put(“str”, “呵呵呵呵呵”);
+                list.add(map);
+
+                map = new HashMap&lt;string, Object&gt;();
+                map.put(“str”, “呵呵”);
+                list.add(map);
+
+                map = new HashMap&lt;string, Object&gt;();
+                map.put(“str”, “呵呵呵呵呵呵呵呵呵呵呵呵呵呵呵呵呵”);
+                list.add(map);
+
+                map = new HashMap&lt;string, Object&gt;();
+                map.put(“str”, “呵呵呵呵呵呵”);
+                list.add(map);
+
+                map = new HashMap&lt;string, Object&gt;();
+                map.put(“str”, “呵呵呵呵呵呵呵呵呵呵\n呵呵呵呵\n呵呵\n呵呵”);
+                list.add(map);
+
+                map = new HashMap&lt;string, Object&gt;();
+                map.put(“str”, “呵呵呵呵呵呵呵呵呵呵呵呵呵呵\n呵呵呵呵”);
+                list.add(map);
+                return list;
+        }
+}</pre>
+<div>
+<strong>原创文章，转载请注明：</strong>&nbsp;转载自<a href="http://blog.devdiv.com/">DEVDIV博客</a>
+<strong>本文链接地址:</strong>&nbsp;<a href="http://blog.devdiv.com/android-ui%e5%bc%80%e5%8f%91%e7%ac%ac%e5%9b%9b%e7%af%87%e2%80%94%e2%80%94%e5%ae%9e%e7%8e%b0%e5%83%8fhandcent-sms%e6%88%96%e8%80%85chomp-sms%e9%82%a3%e6%a0%b7%e7%9a%84%e6%b0%94%e6%b3%a1%e7%9f%ad.html">Android UI开发第四篇——实现像handcent sms或者chomp sms那样的气泡短信样式</a>
+</div> 

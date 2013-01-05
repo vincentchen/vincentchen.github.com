@@ -1,0 +1,60 @@
+---
+layout: post
+title: CAS安全性介绍
+tags:
+- Architecture
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: cas%e5%ae%89%e5%85%a8%e6%80%a7%e4%bb%8b%e7%bb%8d
+---
+<a href="http://blog.csdn.net/hudon/article/details/1499817">http://blog.csdn.net/hudon/article/details/1499817</a>
+
+CAS 的安全性是一个非常重要的 Topic 。 CAS 从 v1 到 v3 ，都很依赖于 SSL ，它假定了这样一个事实，用户在一个非常不安全的网络环境中使用 SSO ， Hacker 的 Sniffer 会很容易抓住所有的 Http Traffic ，包括通过 Http传送的密码甚至 Ticket 票据。
+
+TGC/PGT 安全性
+<div>       对于一个 CAS 用户来说，最重要是要保护它的 TGC ，如果 TGC 不慎被 CAS Server 以外的实体获得， Hacker 能够找到该 TGC ，然后冒充 CAS 用户访问所有授权资源。</div>
+<div>       SSO 的安全性问题比普通应用的安全性还要严重，因为 SSO 存在一种门槛效应。以前即使 Hacker 能够截获用户在 Web 应用 A 的密码，它也未必能知道用户在 Web 应用 B 的密码，但 SSO 让 Hacker 只需要截获 TGC( 突破了门槛 ) ，即能访问所有与该用户相关的所有应用系统。</div>
+<div>       PGT 跟 TGC 的角色是一样的，如果被 Hacker 获得，后果可想而知。</div>
+<div>       从基础模式可以看出， TGC 是 CAS Server 通过 SSL 方式发送给终端用户，因此，要截取 TGC 难度非常大，从而确保 CAS 的安全性。</div>
+<div>       因此，某些人认为 CAS 可以不使用 SSL 的想法需要更正一下， CAS 的传输安全性仅仅依赖与 SSL 。</div>
+<div>       跟 Kerberos 一样 TGT ， TGC 也有自己的存活周期。下面是 CAS 的 web.xml 中，通过 grantingTimeout 来设置 CAS TGC 存活周期的参数，参数默认是 120 分钟，在合适的范围内设置最小值，太短，会影响 SSO 体验，太长，会增加安全性风险。</div>
+&nbsp;
+<table border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td valign="top" width="456">
+<div>    &lt;context-param&gt;</div>
+<div>        &lt;param-name&gt;edu.yale.its.tp.cas.grantingTimeout&lt;/param-name&gt;</div>
+<div>        &lt;param-value&gt;7200&lt;/param-value&gt;</div>
+<div>    &lt;/context-param&gt;</div></td>
+</tr>
+</tbody>
+</table>
+&nbsp;
+<div>TGC 面临的风险主要并非传输窃取。比如你登陆了之后，没有 Logout ，离开了电脑，别人就可以打开你的浏览器，直接访问你授权访问的应用 ) ，设置一个 TGC 的有效期，可以减少被别人盗用，或者被 Hacker 入侵你的电脑直接获取你系统目录下的 TGC Cookie 。</div>
+<div>Service Ticket/Proxy Ticket 安全性
+<div>       首要明白， Service Ticket 是通过 Http 传送的，以为着所网络中的其他人可以 Sniffer 到其他人的 Ticket 。</div>
+<div>CAS 协议从几个方面让 Service Ticket 变得更加安全。</div>
+<div>l         Service Ticket 只能使用一次。</div>
+<div>CAS 协议规定，无论 Service Ticket 验证是否成功， CAS Server 都会将服务端的缓存中清除该 Ticket ，从而可以确保一个 Service Ticket 被使用两次。</div>
+<div>l         Service Ticket 在一段时间内失效。</div>
+<div>假设用户拿到 Service Ticket 之后，他请求 helloservice 的过程又被中断了， Service Ticket 就被空置了，事实上，此时， Service Ticket 仍然有效。 CAS 规定 Service Ticket 只能存活一定的时间，然后 CAS Server 会让它失效。通过在 web.xml 中配置下面的参数，可以让 Service Ticket 在多少秒内失效。</div>
+<table border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td valign="top" width="453">
+<div>&lt;context-param&gt;</div>
+<div>&lt;param-name&gt;edu.yale.its.tp.cas.serviceTimeout&lt;/param-name&gt;</div>
+<div>&lt;param-value&gt;300&lt;/param-value&gt;</div>
+<div>&lt;/context-param&gt;</div></td>
+</tr>
+</tbody>
+</table>
+<div>       该参数在业务应用的条件范围内，越小越安全。</div>
+<div>l         Service Ticket 是基于随机数生成的。</div>
+<div>Service Ticket 必须足够随机，如果 Service Ticket 生成规则被猜出（如果你使用了 ST+Helloservice+ 自增序列的方式， Hacker 就可以构造下一个 Ticket ）， Hacker 就等于绕过 CAS 认证，直接访问所有服务。</div>
+</div>

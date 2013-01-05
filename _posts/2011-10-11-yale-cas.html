@@ -1,0 +1,67 @@
+---
+layout: post
+title: Yale CAS实现原理及其基础协议
+tags:
+- Architecture
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _oembed_1f122e8fe8536aecd3345ee0dce907b7: ! '{{unknown}}'
+  _oembed_e506d4f676f6612520c376b5028cc6bb: ! '{{unknown}}'
+---
+http://blog.csdn.net/hudon/article/details/1499815
+
+CAS(Central Authentication Service) 是 Yale 大学发起的一个开源项目，据统计，大概每 10 个采用开源构建 Web SSO 的 Java 项目，就有 8 个使用 CAS 。对这些统计，我虽然不以为然，但有一点可以肯定的是， CAS 是我认为最简单实效，而且足够安全的 SSO 选择。
+<div>       本节主要分析 CAS 的安全性，以及为什么 CAS 被这样设计，带着少许密码学的基础知识，我希望有助于读者对 CAS 的协议有更深层次的理解。</div>
+<div>
+<div>从结构体系看， CAS 包含两部分：</div>
+<div><span style="color: #0000ff;">l         CAS Server</span></div>
+<div>CAS Server 负责完成对用户的认证工作， CAS Server 需要独立部署，有不止一种 CAS Server 的实现， Yale CAS Server 和 ESUP CAS Server 都是很不错的选择。</div>
+<div>CAS Server 会处理用户名 / 密码等凭证 (Credentials) ，它可能会到数据库检索一条用户帐号信息，也可能在 XML 文件中检索用户密码，对这种方式， CAS 均提供一种灵活但同一的接口 / 实现分离的方式， CAS 究竟是用何种认证方式，跟 CAS 协议是分离的，也就是，这个认证的实现细节可以自己定制和扩展。</div>
+<div><span style="color: #0000ff;">l         CAS Client</span></div>
+<div>CAS Client 负责部署在客户端（注意，我是指 Web 应用），原则上， CAS Client 的部署意味着，当有对本地 Web 应用的受保护资源的访问请求，并且需要对请求方进行身份认证， Web 应用不再接受任何的用户名密码等类似的 Credentials ，而是重定向到 CAS Server 进行认证。</div>
+<div>目前， CAS Client 支持（某些在完善中）非常多的客户端，包括 Java 、 .Net 、 ISAPI 、 Php 、 Perl 、 uPortal 、 Acegi 、 Ruby 、 VBScript 等客户端，几乎可以这样说， CAS 协议能够适合任何语言编写的客户端应用。</div>
+<div> 剖析协议就像剖析设计模式，有些时候，协议让人摸不着头脑。 CAS 的代理模式要相对复杂一些，它引入了一些新的概念，我希望能够在这里描述一下其原理，有助于读者在配置和调试 CAS SSO 有更清晰的思路。
+<div>如果没记错， CAS 协议应该是由 <a href="mailto:drew.mazurek@yale.edu">Drew Mazurek</a> 负责可开发的，从 CAS v1 到现在的 CAS v3 ，整个协议的基础思想都是基于 Kerberos 的票据方式。</div>
+<div>       CAS v1 非常原始，传送一个用户名居然是 ”yes/ndavid.turing” 的方式， CAS v2 开始使用了 XML 规范，大大增强了可扩展性， CAS v3 开始使用 AOP 技术，让 Spring 爱好者可以轻松配置 CAS Server 到现有的应用环境中。</div>
+<div>CAS 是通过 TGT(Ticket Granting Ticket) 来获取 ST(Service Ticket) ，通过 ST 来访问服务，而 CAS 也有对应 TGT ， ST 的实体，而且他们在保护 TGT 的方法上虽然有所区别，但是，最终都可以实现这样一个目的——免去多次登录的麻烦。</div>
+<div>       下面，我们看看 CAS 的基本协议框架：</div>
+<div>基础协议
+<div>[flickr id="6856261236" thumbnail="medium_640" overlay="false" size="small" group="" align="center"] 
+CAS 基础模式</div>
+<div>       上图是一个最基础的 CAS 协议， CAS Client 以 Filter 方式保护 Web 应用的受保护资源，过滤从客户端过来的每一个 Web 请求，同时， CAS Client 会分析 HTTP 请求中是否包请求 Service Ticket( 上图中的 Ticket) ，如果没有，则说明该用户是没有经过认证的，于是， CAS Client 会重定向用户请求到 CAS Server （ Step 2 ）。 Step 3 是用户认证过程，如果用户提供了正确的 Credentials ， CAS Server 会产生一个随机的 Service Ticket ，然后，缓存该 Ticket ，并且重定向用户到 CAS Client （附带刚才产生的 Service Ticket ）， Service Ticket 是不可以伪造的，最后， Step 5 和 Step6 是 CAS Client 和 CAS Server 之间完成了一个对用户的身份核实，用 Ticket 查到 Username ，因为 Ticket 是 CAS Server 产生的，因此，所以 CAS Server 的判断是毋庸置疑的。</div>
+<div>       该协议完成了一个很简单的任务，就是 User(david.turing) 打开 IE ，直接访问 helloservice 应用，它被立即重定向到 CAS Server 进行认证， User 可能感觉到浏览器在 helloservcie 和 casserver 之间重定向，但 User 是看不到， CAS Client 和 CAS Server 相互间的 Service Ticket 核实 (Validation) 过程。当 CAS Server 告知 CAS Client 用户 Service Ticket 对应确凿身份， CAS Client 才会对当前 Request 的用户进行服务。</div>
+<div>CAS 如何实现 SSO
+<div>       当我们的 Web 时代还处于初级阶段的时候， SSO 是通过共享 cookies 来实现，比如，下面三个域名要做 SSO ：</div>
+<div><a href="http://www.blogjava.net/">http://www.blogjava.net</a></div>
+<div><a href="http://www.matrix.org.cn/">http://www.matrix.org.cn</a></div>
+<div><a href="http://www.csdn.net/">http://www.csdn.net</a></div>
+<div>如果通过 CAS 来集成这三个应用，那么，这三个域名都要做一些域名映射，</div>
+<div><a href="http://blogjava.cas.org/">http://blogjava.cas.org</a></div>
+<div><a href="http://matrix.cas.org/">http://matrix.cas.org</a></div>
+<div><a href="http://csdn.cas.org/">http://csdn.cas.org</a></div>
+<div>因为是同一个域，所以每个站点都能够共享基于 cas.org 的 cookies 。这种方法原始，不灵活而且有不少安全隐患，已经被抛弃了。</div>
+<div>CAS 可以很简单的实现跨域的 SSO ，因为，单点被控制在 CAS Server ，用户最有价值的 TGC-Cookie 只是跟 CAS Server 相关， CAS Server 就只有一个，因此，解决了 cookies 不能跨域的问题。</div>
+<div>回到 CAS 的基础协议图，当 Step3 完成之后， CAS Server 会向 User 发送一个 Ticket granting cookie (TGC) 给 User 的浏览器，这个 Cookie 就类似 Kerberos 的 TGT ，下次当用户被 Helloservice2 重定向到 CAS Server 的时候， CAS Server 会主动 Get 到这个 TGC cookie ，然后做下面的事情：</div>
+<div>1，              如果 User 的持有 TGC 且其还没失效，那么就走基础协议图的 Step4 ，达到了 SSO 的效果。</div>
+<div>2，              如果 TGC 失效，那么用户还是要重新认证 ( 走基础协议图的 Step3) 。</div>
+<div><strong> CAS 的代理模式</strong></div>
+<div> 模式 1 已经能够满足大部分简单的 SSO 应用，现在，我们探讨一种更复杂的情况，即用户访问 helloservice ， helloservice 又依赖于 helloservice2 来获取一些信息，如同：
+<div>User à helloservice à helloservice2</div>
+<div>这种情况下，假设 helloservice2 也是需要对 User 进行身份验证才能访问，那么，为了不影响用户体验（过多的重定向导致 User 的 IE 窗口不停地 闪动 ) ， CAS 引入了一种 Proxy 认证机制，即 CAS Client 可以代理用户去访问其它 Web 应用。</div>
+<div>代理的前提是需要 CAS Client 拥有用户的身份信息 ( 类似凭据 ) 。 与其说之前我们提到的 TGC 是用户持有对自己身份信息的一种凭据，则这里的 PGT 就是 CAS Client 端持有的对用户身份信息的一种凭据。凭借 TGC ， User 可以免去输入密码以获取访问其它服务的 Service Ticket ，所以，这里，凭借 PGT ， Web 应用可以代理用户去实现后端的认证，而无需前端用户的参与。</div>
+<div>如下面的 CAS Proxy 图所示， CAS Client 在基础协议之上，提供了一个额外的 PGT URL 给 CAS Server, 于是， CAS Server 可以通过 PGT URL 提供一个 PGT 给 CAS Client 。</div>
+<div>[flickr id="7002375905" thumbnail="medium_640" overlay="false" size="small" group="" align="center"] 
+初学者可能会对上图的 PGT URL 感到迷惑，或者会问，为什么要这么麻烦，要通过一个额外的 URL( 而且是 SSL 的入口 ) 去传递 PGT ？如果直接在 Step 6 返回，则连用来做对应关系的 PGTIOU 都可以省掉。 PGTIOU 设计是从安全性考虑的，非常必要， CAS 协议安全性问题我会在后面一节介绍。</div>
+<div>于是， CAS Client 拿到了 PGT( PGTIOU-85…..ti2td ) ，这个 PGT 跟 TGC 同样地关键， CAS Client 可以通过 PGT 向后端 Web 应用进行认证。如下图所示， Proxy 认证与普通的认证其实差别不大， Step1, 2 与基础模式的 Step 1,2 几乎一样，唯一不同的是， Proxy 模式用的是 PGT 而不是 TGC ，是 Proxy Ticket （ PT ）而不是 Service Ticket 。</div>
+<div>最终的结果是， helloservice2 明白 helloservice 所代理的客户是 David. Turing 同学，同时，根据本地策略， helloservice2 有义务为 PGTURL=http://helloservice/proxy 服务 (PGTURL 用于表示一个 Proxy 服务 ) ，于是它传递数据给 helloservice 。这样， helloservice 便完成一个代理者的角色，协助 User 返回他想要的数据。</div>
+<div>[flickr id="7002375993" thumbnail="medium_640" overlay="false" size="medium_640" group="" align="center"]
+代理认证模式非常有用，它也是 CAS 协议 v2 的一个最大的变化，这种模式非常适合在复杂的业务领域中应用 SSO 。因为，以前我们实施 SSO 的时候，都是假定以 IE User 为 SSO 的访问者，忽视了业务系统作为 SSO 的访问者角色。</div>
+</div>
+</div>
+</div>
+</div>
+</div>  

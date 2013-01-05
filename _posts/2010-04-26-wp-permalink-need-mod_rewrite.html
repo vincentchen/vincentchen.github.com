@@ -1,0 +1,16 @@
+---
+layout: post
+title: WordPress Permalink需要Apache mod_rewrite模块
+tags:
+- web
+- wordpress
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: wordpress-permalink%e9%9c%80%e8%a6%81apache-mod_rewrite%e6%a8%a1%e5%9d%97
+---
+安装完WordPress，通过后台修改了permalink设置发现所有的链接都打不开了。
+最后才发现需要把mod_rewrite启用起来才行。
+原来是用的apache的url rewrite实现的。
