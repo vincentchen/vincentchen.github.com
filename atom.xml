@@ -11,7 +11,7 @@ layout: nil
  <id>http://blog.vincentchan.info/</id>
  <author>
    <name>Vincent Chan</name>
-   <email>yanhonglei@gmail.com</email>
+   <email>vencent[@]gmail.com</email>
  </author>
  
  {% for post in site.posts limit:15 %}
